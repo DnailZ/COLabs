@@ -1,0 +1,5 @@
+logic/ALU.v
+logic/Control.v
+logic/SortMachine.v
+sim/ALU_tb.v
+sim/SortMachine_tb.v
