@@ -8,20 +8,20 @@
 module ALU
 #(
     parameter WIDTH = 32,
-    parameter OP_ADD = 3'b000,       // 这里将所有ALU符号作为parameter           
-    parameter OP_SUB = 3'b001,       
-    parameter OP_AND = 3'b010,       
-    parameter OP_OR = 3'b011,        
-    parameter OP_XOR = 3'b100,       
-    parameter ALUOP_W = 3            // ALU 字的长度（想想回头写Cpu的时候怎么都得用4位的）
-) (                                  
-    output reg [WIDTH-1:0] y,        // 输出
-    output reg  zf,                  // 0 flag
-    output reg  cf,                  // 进位 flag
-    output reg  of,                  // 溢出 flag
-    input [WIDTH-1:0] a,             // 输入
-    input [WIDTH-1:0] b,             // 输入
-    input [ALUOP_W-1:0] m            // aluop
+    parameter OP_ADD = 3'b000,           // 这里将所有ALU符号作为parameter           
+    parameter OP_SUB = 3'b001,           
+    parameter OP_AND = 3'b010,           
+    parameter OP_OR = 3'b011,            
+    parameter OP_XOR = 3'b100,           
+    parameter ALUOP_W = 3                // ALU 字的长度（想想回头写Cpu的时候怎么都得用4位的）
+) (                                      
+    output reg signed[WIDTH-1:0] y,      // 输出
+    output reg  zf,                      // 0 flag
+    output reg  cf,                      // 进位 flag (在不溢出的情况下，表示和/差的正负)
+    output reg  of,                      // 溢出 flag
+    input signed[WIDTH-1:0] a,           // 输入
+    input signed[WIDTH-1:0] b,           // 输入
+    input [ALUOP_W-1:0] m                // aluop
 );
     // ALU组合逻辑
     /// doc_omit begin
@@ -31,28 +31,30 @@ module ALU
     wire b_msb = b[WIDTH-1];
     wire y_msb = y[WIDTH-1];
     always @(*) begin
-        {y, zf, cf, of} = 0;                         // 防止综合出锁存器
-        case(m)                                      
-            OP_ADD: begin                            
-                {cf, y} = a + b;                     // 求和 
-                of = (~a_msb & ~b_msb &  y_msb)      // 溢出判断
-                    | (a_msb &  b_msb & ~y_msb);     
-                zf = ~(|y);                          // 0判断
-            end                                      
-            OP_SUB: begin                            
-                {cf, y} = a - b;                     
-                of = (~a_msb &  b_msb &  y_msb)      
-                   | ( a_msb & ~b_msb & ~y_msb);     // 与上面相似
-                zf = ~ (|y);                         
-            end                                      
-            OP_AND: y = a & b;                       
-            OP_OR: y = a | b;                        
-            OP_XOR: y = a ^ b;                       
-            default: ;                               // 这里可以留空
+        {y, zf, cf, of} = 0;                            // 防止综合出锁存器
+        case(m)                                         
+            OP_ADD: begin                               
+                {cf, y} = {a_msb, a} + {b_msb, b};      // 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
+                of = (~a_msb & ~b_msb &  y_msb)         // 溢出判断
+                    | (a_msb &  b_msb & ~y_msb);        
+                zf = ~(|y);                             // 0判断
+            end                                         
+            OP_SUB: begin                               
+                {cf, y} = {a_msb, a} - {b_msb, b};      
+                of = (~a_msb &  b_msb &  y_msb)         
+                   | ( a_msb & ~b_msb & ~y_msb);        // 与上面相似
+                zf = ~ (|y);                            
+            end                                         
+            OP_AND: y = a & b;                          
+            OP_OR: y = a | b;                           
+            OP_XOR: y = a ^ b;                          
+            default: ;                                  // 这里可以留空
         endcase
     end
     //codeend
 
     /// doc_omit end
+
+
 endmodule
 

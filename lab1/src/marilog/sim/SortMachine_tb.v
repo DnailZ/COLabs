@@ -27,10 +27,10 @@ module tb_SortMachine;
                 sort_s0,sort_s1,sort_s2,sort_s3
             );
             // 生成随机数
-            sort_r0 = {$random} % 60;
-            sort_r1 = {$random} % 60;
-            sort_r2 = {$random} % 60;
-            sort_r3 = {$random} % 60;
+            sort_r0 = $random % 60;
+            sort_r1 = $random % 60;
+            sort_r2 = $random % 60;
+            sort_r3 = $random % 60;
             // 此时打开使能
             input_en = 1;
         end

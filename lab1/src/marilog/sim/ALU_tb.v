@@ -1,5 +1,22 @@
 
+module assert(input clk, input rst, input test);
+    always @(posedge clk)
+    begin
+        if (test !== 1 && !rst)
+        begin
+            $display("ASSERTION FAILED in %m");
+            $finish;
+        end
+    end
+endmodule
+
 module tb_ALU;
+
+    reg clk = 1;
+    always #5 clk = ~clk;
+
+    reg rst = 1;
+    initial #10 rst = 0;
 
     parameter WIDTH = 3;
     parameter ALUOP_W = 3;
@@ -32,27 +49,33 @@ module tb_ALU;
     /// code(tb_ALU)
     /// 这里，对 ALU 在 `WIDTH = 3` 进行了测试，测试样例子编写如下：
     ///
+    localparam VALUE_MAX = (1 << (WIDTH-1)) -1;
+    localparam VALUE_MIN = - (1 << (WIDTH-1));
     initial begin
         // 加法的测试
         alu_m = 0;
-        for(alu_a = 0; alu_a < (1 << WIDTH)-1; alu_a = alu_a + 1) begin
-            for(alu_b = 0; alu_b < (1 << WIDTH)-1; alu_b = alu_b + 1) begin
-                show_add(); #10; // 输出结果
+        for(alu_a = VALUE_MIN; alu_a < VALUE_MAX; alu_a = alu_a + 1) begin
+            for(alu_b = VALUE_MIN; alu_b < VALUE_MAX; alu_b = alu_b + 1) begin
+                #10; show_add(); // 输出结果
             end
-            show_add(); #10;
+             #10; show_add();
         end
-        show_add();#10;
+        #10; show_add();
 
         // 减法的测试
         alu_m = 1;
-        for(alu_a = 0; alu_a < (1 << WIDTH)-1; alu_a = alu_a + 1) begin
-            for(alu_b = 0; alu_b < (1 << WIDTH)-1; alu_b = alu_b + 1) begin
-                show_sub(); #10;
+        for(alu_a = VALUE_MIN; alu_a < VALUE_MAX; alu_a = alu_a + 1) begin
+            for(alu_b = VALUE_MIN; alu_b < VALUE_MAX; alu_b = alu_b + 1) begin
+                #10; show_sub();
             end
-            show_sub(); #10;
+            #10; show_sub();
         end
-        show_sub(); #10;
+         #10; show_sub();
     end
+
+    // 当条件不满足的时候，会终止仿真。这令用一个恒等式检查。
+    assert a0(clk, rst, alu_of ^ alu_cf == alu_y[WIDTH-1]);
+
     /// 得到的仿真波形如下图所示：
     /// 
     /// ![](lab1.assets/wave.png)

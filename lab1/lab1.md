@@ -21,7 +21,7 @@
 </center>
 操作方式 `m` 的编码与 ALU 的功能对应关系如`表-1`所示。表中标志`f` 细化为进位/借位标志`cf`、溢出标志`of`和零标志`zf`；`*`表示根据运算结果设置相应值；`x`表示无关项，可取任意值。例如，加法运算后设置进位标志`cf`、`of`和`zf`，减法运算后设置借位标志`cf`、`of`和`zf`。
 
-<img src="/Users/dnailz/Course/ComputerOrganization/lab1/lab1.assets/image-20200425095939069.png" alt="image-20200425095939069" style="zoom: 50%;" />
+<img src="/Users/dnailz/Course/COLabs/lab1/lab1.assets/image-20200425095939069.png" alt="image-20200425095939069" style="zoom: 50%;" />
 
 <center>表-1 ALU模块功能表</center>
 
@@ -102,7 +102,7 @@ rep[tb_ALU2]
 
 本实验所采用的排序算法是为并行工作设计的（具体方法类似思考题2）。排序的方法（并行）如下图所示：
 
-![截屏2020-04-25 下午10.37.33](/Users/dnailz/Course/ComputerOrganization/lab1/lab1.assets/截屏2020-04-25 下午10.37.33.png)
+![截屏2020-04-25 下午10.37.33](/Users/dnailz/Course/COLabs/lab1/lab1.assets/截屏2020-04-25 下午10.37.33.png)
 
 这里 SWAP 是指，如果两个数据（比如图中的a0、b0），满足 a0 < b0，就把他们交换（SWAP）否则就保持不变。这样 a1 就一定是两个数中较大的那个，b1就一定是两个数中较小的那个。
 
@@ -122,7 +122,7 @@ rep[tb_ALU2]
 
 将每一步运算分到每个周期上，不同的周期完成不同的计算任务即可。
 
-![截屏2020-04-25 下午11.16.18](/Users/dnailz/Course/ComputerOrganization/lab1/lab1.assets/截屏2020-04-25 下午11.16.18.png)
+![截屏2020-04-25 下午11.16.18](/Users/dnailz/Course/COLabs/lab1/lab1.assets/截屏2020-04-25 下午11.16.18.png)
 
 #### 3.2.2 排序电路的数据通路
 
@@ -176,7 +176,7 @@ rep[tb_SortMachine]
 
 ##### 多ALU并行实现
 
-![截屏2020-04-25 下午11.26.42](/Users/dnailz/Course/ComputerOrganization/lab1/lab1.assets/截屏2020-04-25 下午11.26.42.png)
+![截屏2020-04-25 下午11.26.42](/Users/dnailz/Course/COLabs/lab1/lab1.assets/截屏2020-04-25 下午11.26.42.png)
 
 将相同的任务分配到相同的时钟周期即可。
 
@@ -184,5 +184,5 @@ rep[tb_SortMachine]
 
 将SWAP换成完全的组合电路，然后将将所有中间结果作为段寄存器就得到流水线实现。
 
-![截屏2020-04-25 下午11.35.08](/Users/dnailz/Course/ComputerOrganization/lab1/lab1.assets/截屏2020-04-25 下午11.35.08.png)
+![截屏2020-04-25 下午11.35.08](/Users/dnailz/Course/COLabs/lab1/lab1.assets/截屏2020-04-25 下午11.35.08.png)
 

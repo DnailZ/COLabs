@@ -1,4 +1,4 @@
-rep["Word"] = "[WIDTH-1:0]"
+rep["Word"] = "signed[WIDTH-1:0]"
 rep["ALUop"] = "[ALUOP_W-1:0]"
 
 module_dict = dict()

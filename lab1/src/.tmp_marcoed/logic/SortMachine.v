@@ -9,24 +9,24 @@ module SortMachine
     input  rst, 
 
     input  input_en, //[ 输入使能信号
-    input [WIDTH-1:0] i0, 
-    input [WIDTH-1:0] i1, 
-    input [WIDTH-1:0] i2, 
-    input [WIDTH-1:0] i3, 
+    input signed[WIDTH-1:0] i0, 
+    input signed[WIDTH-1:0] i1, 
+    input signed[WIDTH-1:0] i2, 
+    input signed[WIDTH-1:0] i3, 
 
-    output reg [WIDTH-1:0] s0, 
-    output reg [WIDTH-1:0] s1, 
-    output reg [WIDTH-1:0] s2, 
-    output reg [WIDTH-1:0] s3, 
+    output reg signed[WIDTH-1:0] s0, 
+    output reg signed[WIDTH-1:0] s1, 
+    output reg signed[WIDTH-1:0] s2, 
+    output reg signed[WIDTH-1:0] s3, 
     output  done //] rdy完成信号
 );
     
     localparam ALUOP_W = 3;
 
     // ALU单元
-    reg [WIDTH-1:0] alu_a, alu_b;
+    reg signed[WIDTH-1:0] alu_a, alu_b;
     wire [ALUOP_W-1:0] alu_m;
-    wire [WIDTH-1:0] alu_y;
+    wire signed[WIDTH-1:0] alu_y;
     wire  alu_zf;
     wire  alu_cf;
     wire  alu_of;
@@ -129,8 +129,8 @@ module SortMachine
     `ifndef SYNTHESIS
         // 在仿真的情况下，输出调试信息（作为波形的辅助、测试代码正确性）
         always @(posedge clk) begin
-            if(!done)
-                $display("[SortMachine] {s0=%2d, s1=%2d, s2=%2d, s3=%2d}", s0, s1, s2, s3);
+            // if(!done)
+            //     $display("[SortMachine] {s0=%2d, s1=%2d, s2=%2d, s3=%2d}", s0, s1, s2, s3);
         end
     `endif
     

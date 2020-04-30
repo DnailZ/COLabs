@@ -13,12 +13,12 @@ module tb_SortMachine;
     end
 
     reg input_en = 0;
-    reg [WIDTH-1:0] sort_r0, sort_r1, sort_r2, sort_r3;
+    reg signed[WIDTH-1:0] sort_r0, sort_r1, sort_r2, sort_r3;
 
-    wire [WIDTH-1:0] sort_s0;
-    wire [WIDTH-1:0] sort_s1;
-    wire [WIDTH-1:0] sort_s2;
-    wire [WIDTH-1:0] sort_s3;
+    wire signed[WIDTH-1:0] sort_s0;
+    wire signed[WIDTH-1:0] sort_s1;
+    wire signed[WIDTH-1:0] sort_s2;
+    wire signed[WIDTH-1:0] sort_s3;
     wire  sort_done;
     SortMachine#(.WIDTH(WIDTH)) sort (
     	.clk(clk),
@@ -45,10 +45,10 @@ module tb_SortMachine;
                 sort_s0,sort_s1,sort_s2,sort_s3
             );
             // 生成随机数
-            sort_r0 = {$random} % 60;
-            sort_r1 = {$random} % 60;
-            sort_r2 = {$random} % 60;
-            sort_r3 = {$random} % 60;
+            sort_r0 = $random % 60;
+            sort_r1 = $random % 60;
+            sort_r2 = $random % 60;
+            sort_r3 = $random % 60;
             // 此时打开使能
             input_en = 1;
         end

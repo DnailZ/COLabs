@@ -77,9 +77,14 @@ def generate(fin0, fout0):
             if words[-1] == "":
                 words.pop()
             if len(words) >= 1:
-                exec(words[0] + "(" + ",".join(map(lambda s : "\"" + s.replace('"', '\\"') + "\"", words[1:])) + \
+                code = words[0] + "(" + ",".join(map(lambda s : "\"" + s.replace('"', '\\"') + "\"", words[1:])) + \
                     ((",comment=\"" + comment.replace('"', '\\"') + "\"") if comment else "" ) +  \
-                ")")
+                ")"
+                try:
+                    exec(code)
+                except:
+                    print(code)
+                    quit(0)
         else:
             if mode == "python" or mode == "str":
                 code_acc += line
