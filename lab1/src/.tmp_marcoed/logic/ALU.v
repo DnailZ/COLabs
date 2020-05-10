@@ -15,12 +15,12 @@ module ALU
     parameter OP_XOR = 3'b100,
     parameter ALUOP_W = 3   //| ALU 字的长度（想想回头写Cpu的时候怎么都得用4位的）
 ) (
-    output reg signed[WIDTH-1:0] y, //| 输出
+    output reg [WIDTH-1:0] y, //| 输出
     output reg  zf, //| 0 flag
     output reg  cf, //| 进位 flag (在不溢出的情况下，表示和/差的正负)
     output reg  of, //| 溢出 flag
-    input signed[WIDTH-1:0] a, //| 输入
-    input signed[WIDTH-1:0] b, //| 输入
+    input [WIDTH-1:0] a, //| 输入
+    input [WIDTH-1:0] b, //| 输入
     input [ALUOP_W-1:0] m //] aluop
 );
     // ALU组合逻辑
@@ -34,7 +34,7 @@ module ALU
         {y, zf, cf, of} = 0; //[ 防止综合出锁存器
         case(m)
             OP_ADD: begin
-                {cf, y} = {a_msb, a} + {b_msb, b}; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
+                {cf, y} = a + b; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
                 of = (~a_msb & ~b_msb &  y_msb) //| 溢出判断
                     | (a_msb &  b_msb & ~y_msb);
                 zf = ~(|y);  //| 0判断

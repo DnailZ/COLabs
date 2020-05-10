@@ -31,7 +31,7 @@ module tb_SortMachine;
             sort_r1 = $random % 60;
             sort_r2 = $random % 60;
             sort_r3 = $random % 60;
-            // 此时打开使能
+            // 此时打开使能，实现握手
             input_en = 1;
         end
     end

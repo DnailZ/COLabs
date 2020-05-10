@@ -29,7 +29,7 @@ localparam [STATE_W-1:0] SWAP1_2 = 3'b101;
     @ninput input_en,   //| 输入数据的使能
     @outputr alu_a_mux [1:0],
     @outputr alu_b_mux [1:0],
-    @ninput alu_cf,
+    @ninput alu_cmp,
     
     @outputr s0_wr_en,
     @outputr s1_wr_en,
@@ -100,8 +100,8 @@ end''')
     always @(*) begin
         {s0_mux, s1_mux, s2_mux, s3_mux} = 0;
         {s0_wr_en, s1_wr_en, s2_wr_en, s3_wr_en} = 0;
-        // ORDER_ASCEND 选择在 alu_cf 为 1 还是为 0 时进行交换
-        if (alu_cf == ORDER_DESCEND) begin
+        // ORDER_DESCEND 选择在 alu_cmp 为 1 还是为 0 时进行交换
+        if (alu_cmp == ORDER_DESCEND) begin
             case(current)
                 @mux_swap 0 1
                 /// doc_omit begin
@@ -137,7 +137,7 @@ end''')
             default;
         endcase
         if(current != IDLE) begin
-            // $display("[Control] alu_cf ^ ORDER_ASCEND = %d" , alu_cf ^ ORDER_ASCEND);
+            // $display("[Control] alu_cmp ^ ORDER_ASCEND = %d" , alu_cmp ^ ORDER_ASCEND);
         end
         /// doc_omit end
     end

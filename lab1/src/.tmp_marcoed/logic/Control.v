@@ -15,7 +15,7 @@ module Control
     input  input_en, //| 输入数据的使能
     output reg [1:0] alu_a_mux, 
     output reg [1:0] alu_b_mux, 
-    input  alu_cf, 
+    input  alu_cmp, 
     
     output reg  s0_wr_en, 
     output reg  s1_wr_en, 
@@ -91,8 +91,8 @@ module Control
     always @(*) begin
         {s0_mux, s1_mux, s2_mux, s3_mux} = 0;
         {s0_wr_en, s1_wr_en, s2_wr_en, s3_wr_en} = 0;
-        // ORDER_ASCEND 选择在 alu_cf 为 1 还是为 0 时进行交换
-        if (alu_cf == ORDER_DESCEND) begin
+        // ORDER_DESCEND 选择在 alu_cmp 为 1 还是为 0 时进行交换
+        if (alu_cmp == ORDER_DESCEND) begin
             case(current)
                 SWAP0_1: begin
                     s0_mux = 1; s1_mux = 0;
@@ -147,7 +147,7 @@ module Control
             default;
         endcase
         if(current != IDLE) begin
-            // $display("[Control] alu_cf ^ ORDER_ASCEND = %d" , alu_cf ^ ORDER_ASCEND);
+            // $display("[Control] alu_cmp ^ ORDER_ASCEND = %d" , alu_cmp ^ ORDER_ASCEND);
         end
         /// doc_omit end
     end

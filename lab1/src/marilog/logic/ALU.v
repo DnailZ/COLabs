@@ -34,7 +34,7 @@
         {y, zf, cf, of} = 0; //[ 防止综合出锁存器
         case(m)
             OP_ADD: begin
-                {cf, y} = {a_msb, a} + {b_msb, b}; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
+                {cf, y} = a + b; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
                 of = (~a_msb & ~b_msb &  y_msb) //| 溢出判断
                     | (a_msb &  b_msb & ~y_msb);
                 zf = ~(|y);  //| 0判断

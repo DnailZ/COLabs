@@ -8,7 +8,7 @@
     @ninput clk,
     @ninput rst,
 
-    @Input input_en, //[ 输入使能信号
+    @Input input_en, //[ 输入使能信号（握手信号）
     @Input i0 Word, 
     @Input i1 Word,
     @Input i2 Word,
@@ -18,7 +18,7 @@
     @outputr s1 Word,
     @outputr s2 Word,
     @outputr s3 Word,
-    @output done //] rdy完成信号
+    @output done //] rdy完成信号（握手信号）
 );
     
     localparam ALUOP_W = 3;
@@ -28,6 +28,8 @@
     wire ALUop alu_m;
     @impl ALU alu ["alu_a", "alu_b", "alu_m"] #(.WIDTH(WIDTH))
     assign alu_m = alu.OP_SUB;
+    wire alu_cmp;
+    assign alu_cmp = alu_m[WIDTH - 1];
 
     // 控制单元
     @impl Control ctrl ["input_en"] #(.WIDTH(WIDTH))
@@ -91,8 +93,8 @@
     `ifndef SYNTHESIS
         // 在仿真的情况下，输出调试信息（作为波形的辅助、测试代码正确性）
         always @(posedge clk) begin
-            // if(!done)
-            //     $display("[SortMachine] {s0=%2d, s1=%2d, s2=%2d, s3=%2d}", s0, s1, s2, s3);
+            if(!done)
+                $display("[SortMachine] {s0=%2d, s1=%2d, s2=%2d, s3=%2d}", s0, s1, s2, s3);
         end
     `endif
     

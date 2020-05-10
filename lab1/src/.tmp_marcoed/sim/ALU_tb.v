@@ -21,10 +21,10 @@ module tb_ALU;
     parameter WIDTH = 3;
     parameter ALUOP_W = 3;
 
-    reg signed[WIDTH-1:0] alu_a, alu_b;
+    reg [WIDTH-1:0] alu_a, alu_b;
     reg [ALUOP_W-1:0] alu_m;
 
-    wire signed[WIDTH-1:0] alu_y;
+    wire [WIDTH-1:0] alu_y;
     wire  alu_zf;
     wire  alu_cf;
     wire  alu_of;
