@@ -1,5 +1,1 @@
-logic/RegFile.v
-logic/Edge.v
-logic/FIFO.v
-sim/FIFO_sim.v
-sim/RegFile_sim.v
+

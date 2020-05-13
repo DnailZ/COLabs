@@ -82,8 +82,9 @@ def generate(fin0, fout0):
                 code = words[0] + "(" + ",".join(map(lambda s : "\"" + s.replace('"', '\\"') + "\"", words[1:])) + \
                     ((",comment=\"" + comment.replace('"', '\\"') + "\"") if comment else "" ) +  \
                 ")"
+                exec(code)
                 try:
-                    exec(code)
+                    pass
                 except:
                     print(code)
                     quit(0)
@@ -114,8 +115,10 @@ verilog_name = argv[2]
 source_path = join(src_name,module_name)
 target_path = join(src_name,verilog_name)
 
-exec("./module.py")
-exec("./struct.py")
+for path in ['module.py', "struct.py"]:
+    fin = str(path)
+    print(fin)
+    exec(open(fin, 'r').read())
 for path in Path(source_path).rglob('*.py'):
     fin = str(path)
     print(fin)
