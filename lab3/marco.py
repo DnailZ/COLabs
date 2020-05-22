@@ -20,6 +20,9 @@ fin = None
 fout = None
 spaces = ""
 
+def _():
+    pass
+
 def wr(str):
     str = str.format(**sys._getframe(1).f_locals)
     for line in str.split("\n"):

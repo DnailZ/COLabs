@@ -205,6 +205,8 @@ rep[regfile_tb]
 
 ### 3.2  分布式和块式单端口RAM的实现与仿真
 
+![image-20200515215338326](/Users/dnailz/Course/COLabs/lab2/lab2.assets/image-20200515215338326.png)
+
 ### 3.3  设计FIFO队列电路的设计和仿真
 
 #### 3.1.1 FIFO队列的设计

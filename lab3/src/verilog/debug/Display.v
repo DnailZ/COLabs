@@ -1,9 +1,16 @@
 module Display
-(
-    output [7:0] led,
-    output reg [2:0] an,
-    input clk,
-    input [31:0] data_display
+#(
+    parameter SIGNAL_W = 13,
+    parameter REG_W = 5,
+    parameter WIDTH = 32,
+    parameter FUNCT_W = 6,
+    parameter OPCODE_W = 6,
+    parameter ALUOP_W = 3
+)(
+    input  clk, 
+    input [WIDTH-1:0] data_display, 
+    output [7:0] seg, 
+    output reg [2:0] an 
 );
     wire clk_display;
     reg [3:0] char;
@@ -36,9 +43,9 @@ module Display
         endcase
     end
     
-    dist_mem_gen_2 Char_LED(
+    dist_mem_gen_2 Char_seg(
         .a(char),
-        .spo(led)
+        .spo(seg)
     );
     
 endmodule

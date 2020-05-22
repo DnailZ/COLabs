@@ -1,24 +1,67 @@
+/// code(dbu) until endmodule
 module DBU
-    (
-        input clk, rst,
-        input succ, step,
-        input [2:0] sel,
-        input m_rf, inc, dec,
-        output [7:0] led, 
-        output [2:0] an,
-        output reg [31:0] data_display,
-        output [11:0] seg
+#(
+    parameter STATUS_W = 237,
+    parameter SIGNAL_W = 13,
+    parameter REG_W = 5,
+    parameter WIDTH = 32,
+    parameter FUNCT_W = 6,
+    parameter OPCODE_W = 6,
+    parameter ALUOP_W = 3
+) (
+    input  clk, 
+    input  rst, 
+    input  succ, 
+    input  step, 
+    input [2:0] sel, 
+    input  m_rf, 
+    input  inc, 
+    input  dec, 
+    output [7:0] seg, 
+    output [2:0] an, 
+    output reg [31:0] data_display, 
+    output reg [16:0] led 
+);
+    // 本来是需要对这些信号做除抖动的，这里为了仿真暂时省略
+    wire  step_rising;
+    RisingDetect step_inst (
+    	.clk(clk),
+    	.rst(rst),
+    	.y(step),
+    	.rising(step_rising)
     );
-    wire step_edg, inc_edg, dec_edg;
-    wire [31:0] next_PC, PC, Instruction, rd1, rd2, ALU_result, Mem_rd;
-    //reg [31:0] data_display;
-    wire [235:0] status;
-    wire [32:0] m_data, rf_data;
-    reg [7:0] m_rf_addr;
-    wire run;
+    wire  inc_rising;
+    RisingDetect inc_inst (
+    	.clk(clk),
+    	.rst(rst),
+    	.y(inc),
+    	.rising(inc_rising)
+    );
+    wire  dec_rising;
+    RisingDetect dec_inst (
+    	.clk(clk),
+    	.rst(rst),
+    	.y(dec),
+    	.rising(dec_rising)
+    );
 
-    CPU CPU_debug
-    (
+    // m_rf_addr 的增加和减少。
+    reg [7:0] m_rf_addr;
+    always@(posedge clk or posedge rst) begin
+        if(rst)
+            m_rf_addr <= 0;
+        else if(inc_rising)
+            m_rf_addr <= m_rf_addr + 1;
+        else if(dec_rising)
+            m_rf_addr <= m_rf_addr - 1;
+        else
+            m_rf_addr <= m_rf_addr;
+    end
+
+    wire run = succ | step_rising;
+    wire [STATUS_W-1:0] status;
+    wire [WIDTH-1:0] m_data, rf_data;
+    CPU CPU_debug (
         .clk(clk),
         .rst(rst),
         .run(run),
@@ -27,70 +70,50 @@ module DBU
         .m_data(m_data),
         .rf_data(rf_data)
     );
-    
-    assign { next_PC, PC, Instruction, rd1,
-                rd2, ALU_result, Mem_rd } = status;
-    
-    EDG EDG_step
-    (
-        .y(step),
-        .p(step_edg),
-        .clk(clk), .rst(rst)
-    );
-    
-    EDG EDG_inc
-    (
-        .y(inc),
-        .p(inc_edg),
-        .clk(clk), .rst(rst)
-    );
-    
-    EDG EDG_dec
-    (
-        .y(dec),
-        .p(dec_edg),
-        .clk(clk), .rst(rst)
-    );
-    
-    assign run = succ | step_edg;
-    
-    always@(posedge clk or posedge rst) begin
-        if(rst)
-            m_rf_addr <= 0;
-        else if(inc_edg)
-            m_rf_addr <= m_rf_addr + 1;
-        else if(dec_edg)
-            m_rf_addr <= m_rf_addr - 1;
-        else
-            m_rf_addr <= m_rf_addr;
-    end
-    
+
+    wire [12:0] status_signal;
+    wire [31:0] status_next_pc;
+    wire [31:0] status_pc;
+    wire [31:0] status_instruction;
+    wire [31:0] status_regfile_rd0;
+    wire [31:0] status_regfile_rd1;
+    wire [31:0] status_alu_out;
+    wire [31:0] status_mem_rd;
+    assign { status_signal, status_next_pc, status_pc, status_instruction, status_regfile_rd0, status_regfile_rd1, status_alu_out, status_mem_rd} = status;
+
+    // data_display 的选择。
     always@(*) begin
         case(sel)
-        0: begin
-            if(m_rf)
-                data_display = m_data;
-            else
-                data_display = rf_data;
-        end
-        1: data_display = next_PC;
-        2: data_display = PC;
-        3: data_display = Instruction;
-        4: data_display = rd1;
-        5: data_display = rd2;
-        6: data_display = ALU_result;
-        7: data_display = Mem_rd;
+            0: begin
+                if(m_rf)
+                    data_display = m_data;
+                else
+                    data_display = rf_data;
+            end
+            1: data_display = status_next_pc;
+            2: data_display = status_pc;
+            3: data_display = status_instruction;
+            4: data_display = status_regfile_rd0;
+            5: data_display = status_regfile_rd1;
+            6: data_display = status_alu_out;
+            7: data_display = status_mem_rd;
         endcase
     end
     
-    assign seg = status[235:224]; 
+    // LED 输出
+    always @(*) begin
+        if(sel == 0) 
+            led = m_rf_addr;
+        else led = status_signal;
+    end
     
-    NixieTube_display Display_unit
-    (
-        .led(led),
-        .an(an),
-        .clk(clk),
-        .data_display(data_display)
+    // 管子输出
+    
+    Display display (
+    	.clk(clk),
+    	.seg(seg),
+    	.an(an),
+    	.data_display(data_display)
     );
     
 endmodule

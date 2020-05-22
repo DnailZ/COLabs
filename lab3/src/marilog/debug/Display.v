@@ -1,9 +1,11 @@
-module Display
-(
-    output [7:0] led,
-    output reg [2:0] an,
-    input clk,
-    input [31:0] data_display
+@module Display
+#(
+    @defparam
+)(
+    @ninput clk,
+    @Input data_display Word,
+    @noutput seg [7:0],
+    @noutputr an [2:0]
 );
     wire clk_display;
     reg [3:0] char;
@@ -36,9 +38,9 @@ module Display
         endcase
     end
     
-    dist_mem_gen_2 Char_LED(
+    dist_mem_gen_2 Char_seg(
         .a(char),
-        .spo(led)
+        .spo(seg)
     );
     
 endmodule

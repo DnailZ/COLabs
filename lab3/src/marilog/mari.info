@@ -1,4 +1,5 @@
 logic/Instruction.v
+debug/Utils.v
 logic/ALU.v
 logic/ALU_control.v
 logic/RegFile.v
@@ -6,6 +7,8 @@ logic/Control.v
 logic/CPU.v
 sim/CPU_sim.v
 sim/DBU_sim.v
-debug/DBU.v
+debug/Edge.v
 debug/Display.v
 debug/ttt.v
+debug/JitterClear.v
+debug/DBU.v

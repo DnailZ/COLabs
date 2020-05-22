@@ -24,17 +24,21 @@
     wire a_msb = a[WIDTH-1];
     wire b_msb = b[WIDTH-1];
     wire y_msb = y[WIDTH-1];
+
+    wire [WIDTH:0] add_result = a + b;
+    wire [WIDTH:0] sub_result = a - b;
+
     always @(*) begin
         {y, zf, cf, of} = 0; //[ 防止综合出锁存器
         case(m)
             `ALU_ADD: begin
-                {cf, y} = a + b; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
+                {cf, y} = add_result; //| 求和，cf 是有符号数加法运算中多出来的一位，可以用于有符号数比较
                 of = (~a_msb & ~b_msb &  y_msb) //| 溢出判断
                     | (a_msb &  b_msb & ~y_msb);
                 zf = ~(|y);  //| 0判断
             end
             `ALU_SUB: begin
-                {cf, y} = {a_msb, a} - {b_msb, b};
+                {cf, y} = sub_result;
                 of = (~a_msb &  b_msb &  y_msb)
                    | ( a_msb & ~b_msb & ~y_msb);//| 与上面相似
                 zf = ~ (|y);

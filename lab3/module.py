@@ -4,6 +4,12 @@ intf_dict = dict()
 current_module = ""
 reg_list = []
 
+def zip_with_end(*args):
+    f = args[0]
+    n = len(f)
+    ending = [False] * (n-1) + [True]
+    return zip(*args, ending)
+
 def module(A):
     print(A)
     global current_module
@@ -126,11 +132,14 @@ def impl(A, name, l, arg="", comment=""):
             wr("reg {o[1]} {name}_{o[0]};")
         else:
             wr("wire {o[1]} {name}_{o[0]};")
+    wr("{comment}")
     wr("{A}{arg} {name} (")
     for n in nio:
         wr("\t.{n[0]}({n[0]}),")
-    for c, p in zip(cin, l[:len(cin)]):
-        wr("\t.{c[0]}({p}),")
+    for c, p, end in zip_with_end(cin, l[:len(cin)]):
+        end = end and len(out) == 0
+        end = "" if end else ","
+        wr("\t.{c[0]}({p}){end}")
     if len(out) >= 1:
         for o in out[:-1]:
             wr("\t.{o[0]}({name}_{o[0]}),")
@@ -140,7 +149,7 @@ def impl(A, name, l, arg="", comment=""):
     reg_list = []
 
 # inst name will add a _inst postfix
-def inst(A, name, l, arg="", comment=""):
+def inst(A, name, l, subname="", arg="", comment=""):
     global reg_list
     l = eval(l)
     cin = module_dict[A][0]
@@ -151,11 +160,13 @@ def inst(A, name, l, arg="", comment=""):
             wr("reg {o[1]} {name}_{o[0]};")
         else:
             wr("wire {o[1]} {name}_{o[0]};")
-    wr("{A}{arg} {name}_inst (")
+    wr("{A}{arg} {name}_inst{subname} (")
     for n in nio:
         wr("\t.{n[0]}({n[0]}),")
-    for c, p in zip(cin, l[:len(cin)]):
-        wr("\t.{c[0]}({p}),")
+    for c, p, end in zip_with_end(cin, l[:len(cin)]):
+        end = end and len(out) == 0
+        end = "" if end else ","
+        wr("\t.{c[0]}({p}){end}")
     if len(out) >= 1:
         for o in out[:-1]:
             wr("\t.{o[0]}({name}_{o[0]}),")

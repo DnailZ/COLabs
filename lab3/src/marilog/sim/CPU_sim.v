@@ -1,7 +1,10 @@
 `timescale 1ns / 1ps
 
-module CPU_sim();
-    localparam WIDTH = 32;
+module CPU_sim
+#(
+    @defparam_struct Status_t
+    @defparam
+)();
     reg clk, rst;
     reg run;
     

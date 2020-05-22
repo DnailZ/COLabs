@@ -4,7 +4,7 @@
 /// 寄存器文件描述如下
 module RegFile
 #(
-    parameter SIGNAL_W = 11,
+    parameter SIGNAL_W = 13,
     parameter REG_W = 5,
     parameter WIDTH = 32,
     parameter FUNCT_W = 6,

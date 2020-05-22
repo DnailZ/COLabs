@@ -5,13 +5,12 @@ module DBU_sim();
     reg succ, step;
     reg [2:0] sel;
     reg m_rf, inc, dec;
-    wire [7:0] led;
+    wire [7:0] seg;
     wire [2:0] an;
-    wire [11:0] seg;
+    wire [11:0] led;
     wire [31:0] data_display;
     
-    DBU DBU_test
-    (
+    DBU DBU_test (
         .clk(clk),
         .rst(rst),
         .succ(succ),
@@ -31,7 +30,7 @@ module DBU_sim();
         #3 rst = 0;
     end
     
-    initial  clk = 0;
+    initial  clk = 1;
     always #5 clk = ~clk;
     
     initial sel = 0;

@@ -114,8 +114,11 @@ verilog_name = argv[2]
 source_path = join(src_name,module_name)
 target_path = join(src_name,verilog_name)
 
-exec("./module.py")
-exec("./struct.py")
+
+for path in ["./module.py","./struct.py"]:
+    fin = str(path)
+    print(fin)
+    exec(open(fin, 'r').read())
 for path in Path(source_path).rglob('*.py'):
     fin = str(path)
     print(fin)

@@ -3,8 +3,8 @@ print(functs)
 def FunctLogic():
     global functs
     for name in functs:
-        funct, alu_m = functs[name]
-        wr("{funct}: alu_m = {alu_m}; // {name}")
+        funct, signal, = functs[name]
+        vlet("ALUSignal_t", "", signal, prefix=funct+": ")
 @end
 
 @module ALU_control
@@ -13,16 +13,19 @@ def FunctLogic():
 ) (
     @Input aluop [2:0],
     @Input funct Funct,
-    @outputr alu_m ALUop 
+    @outputr alu_m ALUop,
+    @outputr alu_src1 [1:0],
+    @outputr mem_addr_mux
 );
     always@(*) begin
         alu_m = 3'bxxx;
+        alu_src1 = `ALUSrc1_Rs;
+        mem_addr_mux = `MemAddrMux_ALU;
         case(aluop)
         `ALUOp_CMD_RTYPE: begin
             case(funct)
                 @FunctLogic
-                default:
-                    alu_m = 3'bxxx;
+                default:;
             endcase
         end
         `ALUOp_CMD_ADD: alu_m = `ALU_ADD;

@@ -54,6 +54,9 @@ def endstruct():
     struct_dict[current_struct] = (A, acc, C)
     nameu = current_struct.upper()[:-2]
     rep[current_struct[:-2]] = inter("[{nameu}_W-1:0]")
+    rep[current_struct[:-2] + ".W"] = str(acc)
+    l = acc - 1
+    rep[current_struct[:-2] + ".T"] = inter("[{l}:0]")
 
 def defparam_struct(A):
     cur = struct_dict[A][0]
@@ -99,22 +102,37 @@ def compose_assign(A, B):
     l = comp(A, B)
     wr("assign {B} = {l}")
 
-def pr_entry(entry, V, end=","):
+def pr_entry(entry, V, end=",", eq="=", var = None):
     (N, T, default) = entry
+    if var != None:
+        if var == "":
+            var = inter("{N} {eq} ")
+        else:
+            var = inter("{var}_N {eq} ")
+    else:
+        var = ""
     if N in V:
         if is_number(V[N]):
-            wr("    {T}'h" + hex(int(V[N]))[2:] + "{end} //| {N}")
+            wr("    {var}{T}'h" + hex(int(V[N]))[2:] + "{end} //| {N}")
         else:
-            wr("    " + V[N] + "{end} //| {N}")
+            wr("    {var}" + V[N] + "{end} //| {N}")
     else:
-        wr("    {default}{end} //| {N} (by default)")
+        wr("    {var}{default}{end} //| {N} (by default)")
 
-def pr_entry2(entry, V, end=","):
+
+def pr_entry2(entry, V, end=",", eq="=", var=None):
     (N, T, _) = entry
-    if is_number(V):
-        wr("    {T}'h" + hex(int(V))[2:] + "{end} //| {N}")
+    if var != None:
+        if var == "":
+            var = inter("{N} {eq} ")
+        else:
+            var = inter("{var}_N {eq} ")
     else:
-        wr("    " + V + "{end} //| {N}")
+        var = ""
+    if is_number(V):
+        wr("    {var}{T}'h" + hex(int(V))[2:] + "{end} //| {N}")
+    else:
+        wr("    {var}" + V + "{end} //| {N}")
 
 def slet(A, B, V, eq="=", prefix="", comment=""):
     (cur, length, L) = struct_dict[A]
@@ -137,10 +155,27 @@ def slet(A, B, V, eq="=", prefix="", comment=""):
         wr("}}; //]")
     elif type(V) == list:
         wr("{prefix} {B} {eq} {{ //[")
-        for entry, v in zip(L[-1],V):
+        for entry, v in zip(L[:-1],V):
+            print(entry, v)
             pr_entry2(entry,v)
         pr_entry2(L[-1],V[-1], end="")
         wr("}}; //]")
+
+def vlet(A, B, V, eq="=", prefix="", comment=""):
+    (cur, length, L) = struct_dict[A]
+    V = eval(V)
+    if type(V) == dict:
+        wr("{prefix}begin //[")
+        for entry in L[:-1]:
+            pr_entry(entry ,V, var=B, eq=eq)
+        pr_entry(L[-1] , V, end="", var=B, eq=eq)
+        wr("end //]")
+    elif type(V) == list:
+        wr("{prefix}begin //[")
+        for entry, v in zip(L[:-1],V):
+            pr_entry2(entry,v, var=B, eq=eq)
+        pr_entry2(L[-1], V[-1], end="", var=B, eq=eq)
+        wr("end //]")
 
 def slet_b(A, B, V, prefix="", comment=""):
     slet(A, B, V, eq="<=", prefix=prefix, comment=comment)
@@ -176,3 +211,5 @@ def enddict():
     name = cur_dict_name
     rep[cur_dict_name[:-2]] = inter("cur_dict[\'{name}\']")
 
+def sintf():
+    pass

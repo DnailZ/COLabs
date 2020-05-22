@@ -1,7 +1,15 @@
 `timescale 1ns / 1ps
 
-module CPU_sim();
-    localparam WIDTH = 32;
+module CPU_sim
+#(
+    parameter STATUS_W = 237,
+    parameter SIGNAL_W = 13,
+    parameter REG_W = 5,
+    parameter WIDTH = 32,
+    parameter FUNCT_W = 6,
+    parameter OPCODE_W = 6,
+    parameter ALUOP_W = 3
+)();
     reg clk, rst;
     reg run;
     
@@ -17,9 +25,10 @@ module CPU_sim();
 
     integer i;
     reg [7:0] addr;
-    wire [235:0] cpu_status;
+    wire [STATUS_W-1:0] cpu_status;
     wire [WIDTH-1:0] cpu_m_data;
     wire [WIDTH-1:0] cpu_rf_data;
+    
     CPU cpu (
     	.clk(clk),
     	.rst(rst),

@@ -1,17 +1,20 @@
 
-module ttt
-    (input clk,
-    output  reg clk_display
-    );
+@module DisplayClock
+#(
+    @defparam
+) (
+    @ninput clk,
+    @outputr display
+);
     reg [15:0] t;
     
     always@(posedge clk) t = t + 1;
     
     always@(posedge clk) begin
         if(t == 0)
-            clk_display <= 1;
+            display <= 1;
         else
-            clk_display <= 0;
+            display <= 0;
     end 
 
 endmodule

@@ -18,7 +18,7 @@ rep["[Rs]"] = "[25:21]"
 rep["[Rt]"] = "[20:16]"
 rep["[Rd]"] = "[15:11]"
 rep["[Addr]"] = "[25:0]"
-
+rep["[Shamt]"] = "[10:6]"
 rep["Opcode"] = "[OPCODE_W-1:0]"
 rep["Word"] = "[WIDTH-1:0]"
 rep["RegId"] = "[REG_W-1:0]"

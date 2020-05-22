@@ -1,17 +1,25 @@
 
-module ttt
-    (input clk,
-    output  reg clk_display
-    );
+module DisplayClock
+#(
+    parameter SIGNAL_W = 13,
+    parameter REG_W = 5,
+    parameter WIDTH = 32,
+    parameter FUNCT_W = 6,
+    parameter OPCODE_W = 6,
+    parameter ALUOP_W = 3
+) (
+    input  clk, 
+    output reg  display 
+);
     reg [15:0] t;
     
     always@(posedge clk) t = t + 1;
     
     always@(posedge clk) begin
         if(t == 0)
-            clk_display <= 1;
+            display <= 1;
         else
-            clk_display <= 0;
+            display <= 0;
     end 
 
 endmodule
