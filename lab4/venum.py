@@ -51,8 +51,11 @@ def defenum(type, define = "localparam", end=""):
 def enum_getname(type, wire, str, eq="="):
     cur_enum = enum_dict[type]
     wr("case({wire})")
-    for e in cur_enum.L:
+    for i, e in enumerate(cur_enum.L):
         name = cur_enum.name.upper() + "_" + e.upper()
         eu = e.upper()
+        if i == 4:
+            wr("/// doc_omit begin")
         wr("{name}: {str} {eq} \"{eu}\";")
+    wr("    /// doc_omit end")
     wr("endcase")

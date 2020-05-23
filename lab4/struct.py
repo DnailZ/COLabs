@@ -61,7 +61,6 @@ def e(A, T="", comment=""):
 def add_element(name, type, default, comment=""):
     global current_struct, acc
     struct_dict[current_struct][2].append((name, type, default))
-    name = current_struct
     wr("// -  {name} ({type}) {comment}")
     acc += type
 

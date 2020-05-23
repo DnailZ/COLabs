@@ -2,6 +2,8 @@
 
 /// code(ctrl) until endmodule
 /// ##### 控制单元
+///
+/// 完整代码参考：（https://github.com/DnailZ/COLabs/blob/master/lab4/src/verilog/logic/Control.v）
 @module Control
 #(
     /// doc_omit begin
@@ -14,6 +16,9 @@
     @Input opcode [5:0],
     @Output sgn Signal // signals
 );
+    // -----------------------------------
+    // State Definition
+    // -----------------------------------
     @venum State
     @tag IDLE
     @tag FI
@@ -38,6 +43,7 @@
     @tag SLTIU
     @tag IMM_WB
     @endenum 
+
     reg State current, next;
 @py
 def goto(state):
@@ -98,10 +104,13 @@ def write_reg(pos, data):
     wr("sgn_reg_dst = `RegDst_{pos};") # Rt/Rd
     wr("sgn_mem_toreg = `MemToReg_{data};") # Mem/Addr
 @end
+    // -----------------------------------
+    // Signal's Logic
+    // -----------------------------------
     @construct Signal_t sgn reg
     @compose_assign Signal_t sgn
 
-    // 这里使用和之前单周期相同的 Signal 数据
+    // 生成Signal的全部组合逻辑
     always @(*) begin
         @vlet Signal_t sgn dict()
         case(current)
@@ -178,7 +187,6 @@ def write_reg(pos, data):
                 @goto MEM_WR
             end
         end
-        
         STATE_MEM_RD: begin
             @mem_read
             @goto MEM_WB
@@ -191,7 +199,7 @@ def write_reg(pos, data):
             @write_reg Rt Mem
             @goto FI
         end
-        // 其他还有 Branch、Jump指令，这里全都省略（完整版参考）
+        // 其他还有 Branch、Jump指令，这里全都省略（完整版参考https://github.com/DnailZ/COLabs/blob/master/lab4/src/verilog/logic/Control.v）
         /// doc_omit begin
         // -----------------------------------
         // Branch and Jump
@@ -261,6 +269,7 @@ def write_reg(pos, data):
         endcase
     end
 
+    // current
     always @(posedge clk or negedge rst) begin
         if(rst) begin
             current = STATE_IDLE;
@@ -269,14 +278,18 @@ def write_reg(pos, data):
         end
     end
 
-    `ifndef SYSTHESIS
+
+    // -----------------------------------
+    // Debug Message（仿真时输出，不会影响综合效果）
+    // -----------------------------------
 
     reg [10*8:0] state_string;
     always @(*) begin
         @enum_getname State_t current state_string
     end
 
-    // 调试输出
+    // （仿真时输出，不会影响综合效果）
+    `ifndef SYSTHESIS
     always @(posedge clk) begin
         if(~rst & run) begin
             $display("[ctrl] current_state %s (%h)", state_string, opcode);

@@ -1,24 +1,51 @@
-@struct ALUSignal
-@e alu_m 4/x // the real ALU operations
-`define ALU_ADD  4'd0
-`define ALU_SUB  4'd1
-`define ALU_AND  4'd2
-`define ALU_OR  4'd3
-`define ALU_XOR  4'd4
-`define ALU_NOR  4'd5
-`define ALU_SHL  4'd6
-`define ALU_SHRL  4'd7
-`define ALU_SHRA  4'd8
-`define ALU_LU  4'd9
-@e alu_src1 1
-`define ALUSrc1_Orig  3'd0
-`define ALUSrc1_Shamt 3'd1
-@e alu_out_mux 2
+/// code(sgn) until codeend
+@struct Signal
+@e pc_write
+@e pc_write_cond
+@e pc_write_notcond // 为 bne 提供的选择器
+@e pc_source 2/x
+`define PCSource_NPC 2'd0
+`define PCSource_Beq 2'd1
+`define PCSource_Jump 2'd2
+@e i_or_d 1/x // memory 入口选择器
+`define MemAddr_I 1'b1
+`define MemAddr_D 1'b0
+@e mem_write
+@e mem_read 1/x  // 写入 mdr
+@e ir_write
+@e mem_toreg 2/x // refile写入数据的mux
+`define MemToReg_Mem 2'd1
+`define MemToReg_ALU 2'd0
+`define MemToReg_PC 2'd2 // 为 jal 设计，设为PC，可以参考后面的代码
+@e reg_write
+@e reg_dst 2/x
+`define RegDst_Rd 2'd1
+`define RegDst_Rt 2'd0
+`define RegDst_RA 2'd2 // 为 jal 设计，设为 5‘d32，可以参考后面的代码
+@e aluop 3/x // 传入ALU_Control
+`define ALUOp_CMD_RTYPE 3'd0
+`define ALUOp_CMD_ADD 3'd1
+`define ALUOp_CMD_SUB 3'd2
+`define ALUOp_CMD_AND 3'd3
+`define ALUOp_CMD_OR 3'd4
+`define ALUOp_CMD_XOR 3'd5
+`define ALUOp_CMD_NOR 3'd6
+`define ALUOp_CMD_LU 3'd7
+@e alu_out_mux 2  // alu出口处的mux
 `define ALUOut_Orig  3'd0
 `define ALUOut_LT 3'd1
 `define ALUOut_LTU 3'd2
-@e is_jr_funct 1
+@e alu_src2 3/x 
+`define ALUSrc2_Reg 3'd0
+`define ALUSrc2_4 3'd1
+`define ALUSrc2_SImm 3'd2
+`define ALUSrc2_SAddr 3'd3
+`define ALUSrc2_UImm 3'd4 // 为 addi 设计，可以参考后面的代码
+@e alu_src1 1/x 
+`define ALUSrc1_PC 2'd0
+`define ALUSrc1_OprA 2'd1
 @endstruct
+// codeend
 
 
 @py
@@ -36,6 +63,32 @@ def def_funct(name, funct_num, alu_m, comment=""):
     dt("alu_m", inter("`ALU_{alu_m}"))
     functs[name] = (inter("`FUNCT_{uname}"), inter("cur_dict[\'{name}_t\']"))
 @end
+
+
+/// code(alusgn) until codeend
+/// 我这里 ALU 控制单元负责所有的 funct 译码，控制单元只对opcode译码，不对 funct 译码。这样设计主要是为了减少控制单元译码的工作量，而ALU控制单元的译码工作量并没有显著增加。
+///
+/// 为了实现一些比较特殊的 rtype 指令，ALU控制单元也会有一些 Signal 信号，具体列举如下：
+@struct ALUSignal
+@e alu_m 4/x // ALU 操作
+`define ALU_ADD  4'd0
+`define ALU_SUB  4'd1
+`define ALU_AND  4'd2
+`define ALU_OR  4'd3
+`define ALU_XOR  4'd4
+`define ALU_NOR  4'd5
+`define ALU_SHL  4'd6
+`define ALU_SHRL  4'd7
+`define ALU_SHRA  4'd8
+`define ALU_LU  4'd9
+@e alu_src1 1 // ALU控制模块能够对 ALU 的第一个选择器做出控制。
+`define ALUSrc1_Orig  3'd0
+`define ALUSrc1_Shamt 3'd1 // 为 sll 指令设计
+@e alu_out_mux 2 // 和上面的控制模块的alu_out_mux相同，ALU控制模块会综合 funct 和控制模块的 alu_out_mux 生成这个 alu_out_mux。
+@e is_jr_funct 1 // 为 jr 特别设计的Signal
+@endstruct
+// codeend
+
 
 /// code(funct) until codeend
 // Functs:
@@ -82,7 +135,6 @@ def def_funct(name, funct_num, alu_m, comment=""):
 @def_funct jr 001000 SUB
 @dt is_jr_funct 1
 @enddict
-
 // codeend
 
 
@@ -95,53 +147,6 @@ def def_funct(name, funct_num, alu_m, comment=""):
 // def_funct sllv 000100 SHL
 // def_funct srlv 000110 SHR
 // def_funct srav 000111 SHRA
-
-/// code(sgn) until codeend
-@struct Signal
-@e pc_write
-@e pc_write_cond
-@e i_or_d 1/x
-`define MemAddr_I 1'b1
-`define MemAddr_D 1'b0
-@e mem_read 1/x
-@e mem_toreg 2/x // DCache出口处的mux
-`define MemToReg_Mem 2'd1
-`define MemToReg_ALU 2'd0
-`define MemToReg_PC 2'd2
-@e mem_write
-@e ir_write
-
-@e reg_write
-@e reg_dst 2/x
-`define RegDst_Rd 2'd1
-`define RegDst_Rt 2'd0
-`define RegDst_RA 2'd2
-@e aluop 3/x // 传入ALU_Control
-`define ALUOp_CMD_RTYPE 3'd0
-`define ALUOp_CMD_ADD 3'd1
-`define ALUOp_CMD_SUB 3'd2
-`define ALUOp_CMD_AND 3'd3
-`define ALUOp_CMD_OR 3'd4
-`define ALUOp_CMD_XOR 3'd5
-`define ALUOp_CMD_NOR 3'd6
-`define ALUOp_CMD_LU 3'd7
-@e alu_out_mux 2
-@e alu_src2 3/x 
-`define ALUSrc2_Reg 3'd0
-`define ALUSrc2_4 3'd1
-`define ALUSrc2_SImm 3'd2
-`define ALUSrc2_SAddr 3'd3
-`define ALUSrc2_UImm 3'd4
-@e alu_src1 1/x 
-`define ALUSrc1_PC 2'd0
-`define ALUSrc1_OprA 2'd1
-@e pc_source 2/x
-`define PCSource_NPC 2'd0
-`define PCSource_Beq 2'd1
-`define PCSource_Jump 2'd2
-@e pc_write_notcond
-@endstruct
-// codeend
 
 @py
 def def_instruction(name, opcode, comment=""):
@@ -166,7 +171,6 @@ def def_instruction(name, opcode, comment=""):
 @dt aluop `ALUOp_CMD_RTYPE
 @dt alu_src2 `ALUSrc2_Reg
 @enddict
-
 @def_instruction addi 001000
 @dt reg_dst `RegDst_Rt
 @dt reg_write 1
@@ -174,7 +178,6 @@ def def_instruction(name, opcode, comment=""):
 @dt aluop `ALUOp_CMD_ADD
 @dt alu_src2 `ALUSrc2_SImm
 @enddict
-
 @def_instruction addiu 001001
 @enddict
 @def_instruction andi 001100
@@ -189,20 +192,14 @@ def def_instruction(name, opcode, comment=""):
 @enddict
 @def_instruction sltiu 001011
 @enddict
-
-@def_instruction bne 000101
-@enddict
-
 @def_instruction lw 100011
 @dt mem_read 1
-
 @dt reg_dst `RegDst_Rt
 @dt reg_write 1
 @dt mem_toreg `MemToReg_Mem
 @dt aluop `ALUOp_CMD_ADD
 @dt alu_src2 `ALUSrc2_SImm
 @enddict
-
 @def_instruction sw 101011
 @dt mem_read 0
 @dt mem_write 1
@@ -210,7 +207,6 @@ def def_instruction(name, opcode, comment=""):
 @dt aluop `ALUOp_CMD_ADD
 @dt alu_src2 `ALUSrc2_SImm
 @enddict
-
 @def_instruction beq 000100
 @dt jump 0
 @dt branch 1
@@ -218,10 +214,14 @@ def def_instruction(name, opcode, comment=""):
 @dt aluop `ALUOp_CMD_SUB
 @dt alu_src2 `ALUSrc2_Reg
 @enddict
-
+@def_instruction bne 000101
+@enddict
 @def_instruction j 000010
 @dt jump 1
 @enddict
 @def_instruction jal 000011
 @enddict
 // codeend 
+
+
+

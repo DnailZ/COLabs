@@ -140,17 +140,25 @@ height="2.0883409886264217in"}
 
 ##### 指令 `opcode`
 
+所有支持的 opcode 列举如下。（就是MIPS在没有协处理器情况下，所支持的全部`opcode`）
+
 rep[instr]
 
 ##### rtype指令 `funct`
+
+所有支持的 `funct` 列举如下。（就是MIPS在没有协处理器情况下，所支持的全部`funct`）
 
 rep[funct]
 
 ##### 控制单元 Signal 
 
-控制单元 Signal 的定义如下：（与讲义定义相同，这里统一了变量书写形式（小写蛇形））
+控制单元 Signal 的定义如下：（与讲义定义名称相同，这里统一了变量书写形式（小写蛇形），当然也添加了很多）
 
 rep[sgn]
+
+##### ALU控制单元 Signal
+
+rep[alusgn]
 
 #### 3.1.2 CPU的设计
 

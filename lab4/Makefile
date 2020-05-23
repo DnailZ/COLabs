@@ -6,6 +6,7 @@ verilog:
 	python3 comment.py .tmp_marcoed verilog
 
 doc: verilog
+	python3 dotgen.py src/marilog/logic/Control.v graph.dot
 	python3 attach.py $(name).md $(upload_name).md
 	open $(upload_name).md
 

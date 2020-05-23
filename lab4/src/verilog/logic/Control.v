@@ -2,6 +2,8 @@
 
 /// code(ctrl) until endmodule
 /// ##### 控制单元
+///
+/// 完整代码参考：（https://github.com/DnailZ/COLabs/blob/master/lab4/src/verilog/logic/Control.v）
 module Control
 #(
     /// doc_omit begin
@@ -19,6 +21,9 @@ module Control
     input [5:0] opcode, 
     output [SIGNAL_W-1:0] sgn // signals
 );
+    // -----------------------------------
+    // State Definition
+    // -----------------------------------
     localparam STATE_W = 5;
     localparam STATE_IDLE = 5'd0;
     localparam STATE_FI = 5'd1;
@@ -42,42 +47,46 @@ module Control
     localparam STATE_SLTI = 5'd19;
     localparam STATE_SLTIU = 5'd20;
     localparam STATE_IMM_WB = 5'd21;
+
     reg [STATE_W-1:0] current, next;
+    // -----------------------------------
+    // Signal's Logic
+    // -----------------------------------
     reg sgn_pc_write;
     reg sgn_pc_write_cond;
+    reg sgn_pc_write_notcond;
+    reg [1:0] sgn_pc_source;
     reg sgn_i_or_d;
-    reg sgn_mem_read;
-    reg [1:0] sgn_mem_toreg;
     reg sgn_mem_write;
+    reg sgn_mem_read;
     reg sgn_ir_write;
+    reg [1:0] sgn_mem_toreg;
     reg sgn_reg_write;
     reg [1:0] sgn_reg_dst;
     reg [2:0] sgn_aluop;
     reg [1:0] sgn_alu_out_mux;
     reg [2:0] sgn_alu_src2;
     reg sgn_alu_src1;
-    reg [1:0] sgn_pc_source;
-    reg sgn_pc_write_notcond;
-    assign sgn = { sgn_pc_write, sgn_pc_write_cond, sgn_i_or_d, sgn_mem_read, sgn_mem_toreg, sgn_mem_write, sgn_ir_write, sgn_reg_write, sgn_reg_dst, sgn_aluop, sgn_alu_out_mux, sgn_alu_src2, sgn_alu_src1, sgn_pc_source, sgn_pc_write_notcond};
+    assign sgn = { sgn_pc_write, sgn_pc_write_cond, sgn_pc_write_notcond, sgn_pc_source, sgn_i_or_d, sgn_mem_write, sgn_mem_read, sgn_ir_write, sgn_mem_toreg, sgn_reg_write, sgn_reg_dst, sgn_aluop, sgn_alu_out_mux, sgn_alu_src2, sgn_alu_src1};
 
-    // 这里使用和之前单周期相同的 [SIGNAL_W-1:0] 数据
+    // 生成Signal的全部组合逻辑
     always @(*) begin
         begin                                 //
             sgn_pc_write = 1'b0;              // pc_write (by default)
             sgn_pc_write_cond = 1'b0;         // pc_write_cond (by default)
+            sgn_pc_write_notcond = 1'b0;      // pc_write_notcond (by default)
+            sgn_pc_source = 2'bxx;            // pc_source (by default)
             sgn_i_or_d = 1'bx;                // i_or_d (by default)
-            sgn_mem_read = 1'bx;              // mem_read (by default)
-            sgn_mem_toreg = 2'bxx;            // mem_toreg (by default)
             sgn_mem_write = 1'b0;             // mem_write (by default)
+            sgn_mem_read = 1'bx;              // mem_read (by default)
             sgn_ir_write = 1'b0;              // ir_write (by default)
+            sgn_mem_toreg = 2'bxx;            // mem_toreg (by default)
             sgn_reg_write = 1'b0;             // reg_write (by default)
             sgn_reg_dst = 2'bxx;              // reg_dst (by default)
             sgn_aluop = 3'bxxx;               // aluop (by default)
             sgn_alu_out_mux = 2'b00;          // alu_out_mux (by default)
             sgn_alu_src2 = 3'bxxx;            // alu_src2 (by default)
             sgn_alu_src1 = 1'bx;              // alu_src1 (by default)
-            sgn_pc_source = 2'bxx;            // pc_source (by default)
-            sgn_pc_write_notcond = 1'b0;      // pc_write_notcond (by default)
         end                                   //
         case(current)
         // -----------------------------------
@@ -166,7 +175,6 @@ module Control
                 next = STATE_MEM_WR;
             end
         end
-        
         STATE_MEM_RD: begin
             sgn_i_or_d = `MemAddr_D;
             sgn_mem_read = 1;
@@ -183,7 +191,7 @@ module Control
             sgn_mem_toreg = `MemToReg_Mem;
             next = STATE_FI;
         end
-        // 其他还有 Branch、Jump指令，这里全都省略（完整版参考）
+        // 其他还有 Branch、Jump指令，这里全都省略（完整版参考https://github.com/DnailZ/COLabs/blob/master/lab4/src/verilog/logic/Control.v）
         /// doc_omit begin
         // -----------------------------------
         // Branch and Jump
@@ -281,6 +289,7 @@ module Control
         endcase
     end
 
+    // current
     always @(posedge clk or negedge rst) begin
         if(rst) begin
             current = STATE_IDLE;
@@ -289,7 +298,10 @@ module Control
         end
     end
 
-    `ifndef SYSTHESIS
+
+    // -----------------------------------
+    // Debug Message（仿真时输出，不会影响综合效果）
+    // -----------------------------------
 
     reg [10*8:0] state_string;
     always @(*) begin
@@ -298,6 +310,7 @@ module Control
         STATE_FI: state_string = "FI";
         STATE_ID: state_string = "ID";
         STATE_EX: state_string = "EX";
+        /// doc_omit begin
         STATE_RTYPE_WB: state_string = "RTYPE_WB";
         STATE_MEM_ADDR: state_string = "MEM_ADDR";
         STATE_MEM_RD: state_string = "MEM_RD";
@@ -316,10 +329,12 @@ module Control
         STATE_SLTI: state_string = "SLTI";
         STATE_SLTIU: state_string = "SLTIU";
         STATE_IMM_WB: state_string = "IMM_WB";
+            /// doc_omit end
         endcase
     end
 
-    // 调试输出
+    // （仿真时输出，不会影响综合效果）
+    `ifndef SYSTHESIS
     always @(posedge clk) begin
         if(~rst & run) begin
             $display("[ctrl] current_state %s (%h)", state_string, opcode);
