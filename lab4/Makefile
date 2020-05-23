@@ -7,6 +7,8 @@ verilog:
 
 doc: verilog
 	python3 dotgen.py src/marilog/logic/Control.v graph.dot
+	dot -Tpng -o ./$(name).assets/graph.png graph.dot
+	rm graph.dot
 	python3 attach.py $(name).md $(upload_name).md
 	open $(upload_name).md
 

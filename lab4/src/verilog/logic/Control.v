@@ -3,7 +3,12 @@
 /// code(ctrl) until endmodule
 /// ##### 控制单元
 ///
+/// 控制单元的状态机大体如下
+///
+/// ![](./lab4.assets/graph.png)
+///
 /// 完整代码参考：（https://github.com/DnailZ/COLabs/blob/master/lab4/src/verilog/logic/Control.v）
+///
 module Control
 #(
     /// doc_omit begin

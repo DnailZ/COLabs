@@ -8,7 +8,7 @@ start:
         j success :: nop
 
 test_sll:
-        li $t0, 0x10000000 // 20
+        li $t0, 0x10000000
         sll $s0, $t0, 3
         beq $s0, $0, fail :: nop
         li $t2, 4
@@ -17,7 +17,7 @@ test_sll:
         jr $ra
 
 test_sra:
-        li $t1, 0xFFFFFFF0 // 44
+        li $t1, 0xFFFFFFF0
         li $t2, 3
         li $t3, -1
         srav $s0, $t1, $t2

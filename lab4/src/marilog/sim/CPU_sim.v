@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+/// code(cpu_sim) until endmodule
 module CPU_sim
 #(
     @defparam_struct Status_t
