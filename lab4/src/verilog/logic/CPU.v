@@ -2,13 +2,13 @@
 /// CPU设计的代码和思路具体见（https://github.com/DnailZ/COLabs/blob/master/lab3/src/verilog/logic/CPU.v）
 module CPU
 #(
-    parameter STATUS_W = 237,
-    parameter SIGNAL_W = 13,
+    parameter STATUS_W = 247,
+    parameter SIGNAL_W = 23,
     parameter REG_W = 5,
     parameter WIDTH = 32,
     parameter FUNCT_W = 6,
     parameter OPCODE_W = 6,
-    parameter ALUOP_W = 3
+    parameter ALUOP_W = 4
 ) (
     input  clk, 
     input  rst, 
@@ -18,9 +18,33 @@ module CPU
     output [WIDTH-1:0] m_data, 
     output [WIDTH-1:0] rf_data 
 );
+    wire [SIGNAL_W-1:0] sgn; // sgn 表示 signal
+    Control ctrl (
+        .clk(clk), // 控制单元需要时钟同步来输出 TCL Console 中的文本调试信息。
+        .rst(rst),
+        .run(run),
+    	.opcode(instruction [31:26] ),
+    	.sgn(sgn)
+    );
+    wire sgn_pc_write;
+    wire sgn_pc_write_cond;
+    wire sgn_i_or_d;
+    wire sgn_mem_read;
+    wire [1:0] sgn_mem_toreg;
+    wire sgn_mem_write;
+    wire sgn_ir_write;
+    wire sgn_reg_write;
+    wire [1:0] sgn_reg_dst;
+    wire [2:0] sgn_aluop;
+    wire [1:0] sgn_alu_out_mux;
+    wire [2:0] sgn_alu_src2;
+    wire sgn_alu_src1;
+    wire [1:0] sgn_pc_source;
+    wire sgn_pc_write_notcond;
+    assign { sgn_pc_write, sgn_pc_write_cond, sgn_i_or_d, sgn_mem_read, sgn_mem_toreg, sgn_mem_write, sgn_ir_write, sgn_reg_write, sgn_reg_dst, sgn_aluop, sgn_alu_out_mux, sgn_alu_src2, sgn_alu_src1, sgn_pc_source, sgn_pc_write_notcond} = sgn;
+
     // 下将 CPU 分为五个阶段分别编写，会在下面的章节逐个展开
     /// doc_omit begin
-
     /// code(stages) until codeend
     /// ##### FI 段
     ///
@@ -29,21 +53,46 @@ module CPU
     // FETCH INSTRUCTION
     // -----------------------------------
     reg [WIDTH-1:0] PC;
-    wire [WIDTH-1:0] instruction;
-    dist_mem_gen_0 icache(
+    reg [WIDTH-1:0] operandA, operandB;
+    reg [WIDTH-1:0] alu_out;
+
+    wire mem_write = sgn_mem_write & run;
+    wire [WIDTH-1:0] mem_rd;
+    wire [WIDTH-1:0] mem_addr = (sgn_i_or_d == `MemAddr_I)? PC : alu_out;
+    
+    dist_mem_gen_0 cache(
         .clk(clk),
-        .a(PC[9:2]),
-        .spo(instruction),
-        .we(0)
+        .a(mem_addr[9:2]),
+        .d(operandB),
+        .we(mem_write),
+        .spo(mem_rd),
+        .dpra(m_rf_addr),
+        .dpo(m_data)
     );
+    reg [WIDTH-1:0] mdr;
+    reg [WIDTH-1:0] instruction;
+    always @(posedge clk) begin
+        if(rst) begin
+            mdr <= 0; instruction <= 0;
+        end else begin
+            if(run && sgn_mem_read) begin
+                mdr <= mem_rd;
+            end
+            if(run && sgn_ir_write) begin
+                instruction <= mem_rd;
+            end
+        end
+    end
 
     reg [WIDTH-1:0] next_PC;
+    wire PCwe;
     always@(posedge clk or posedge rst) begin
         if(rst)
             PC <= 0;
-        else if(run)
+        else if(run & PCwe)
             PC <= next_PC;
     end
+
     /// ##### ID 段
     ///
     /// ID 段，编写控制模块和寄存器文件
@@ -54,26 +103,6 @@ module CPU
     // -----------------------------------
     // DECODE INSTRUCTION
     // -----------------------------------
-
-    wire [SIGNAL_W-1:0] sgn; // sgn 表示 signal
-    Control ctrl (
-        .clk(clk), // 控制单元需要时钟同步来输出 TCL Console 中的文本调试信息。
-        .rst(rst),
-        .run(run),
-    	.opcode(instruction [31:26] ),
-    	.sgn(sgn)
-    );
-    wire sgn_jump;
-    wire sgn_branch;
-    wire sgn_reg_write;
-    wire sgn_reg_dst;
-    wire sgn_mem_read;
-    wire sgn_mem_toreg;
-    wire sgn_mem_write;
-    wire [2:0] sgn_aluop;
-    wire [1:0] sgn_alu_src2;
-    wire sgn_branch_neq;
-    assign { sgn_jump, sgn_branch, sgn_reg_write, sgn_reg_dst, sgn_mem_read, sgn_mem_toreg, sgn_mem_write, sgn_aluop, sgn_alu_src2, sgn_branch_neq} = sgn;
 
     wire [WIDTH-1:0] regfile_rd0;
     wire [WIDTH-1:0] regfile_rd1;
@@ -94,10 +123,21 @@ module CPU
     	.we(regfile_we),
     	.wd(regfile_wd)
     );
-    
+    always @(posedge clk) begin
+        if(rst) begin
+            {operandA, operandB} <= 0;
+        end
+        else if(run) begin
+            operandA <= regfile_rd0;
+            operandB <= regfile_rd1;
+        end
+    end
+
     wire [15:0] Imm = instruction [15:0] ;
     wire [WIDTH-1:0] signed_Imm = {{16{Imm[15]}}, Imm};
-    wire [WIDTH-1:0] unsigned_Imm = {{16{0}}, Imm}; // 无符号数扩展
+    wire [WIDTH-1:0] signed_shifted_Imm = signed_Imm << 2;
+    wire [WIDTH-1:0] unsigned_Imm = {16'b0, Imm}; // 无符号数扩展
+    wire [WIDTH-1:0] imm_addr = {PC[31:28] , instruction [25:0] , 2'b0};
 
     /// ##### EX 段
     /// EX 段，编写 ALU 以及其控制模块，
@@ -110,33 +150,32 @@ module CPU
     // -----------------------------------
 
     wire [ALUOP_W-1:0] aluctrl_alu_m;
-    wire [1:0] aluctrl_alu_src1;
-    wire  aluctrl_mem_addr_mux;
+    wire  aluctrl_alu_src1;
+    wire [1:0] aluctrl_alu_out_mux;
+    wire  aluctrl_is_jr_funct;
     // ALU控制单元（https://github.com/DnailZ/COLabs/blob/master/lab3/src/verilog/logic/CPU.v）
     ALU_control aluctrl (
+    	.sgn_alu_out_mux(sgn_alu_out_mux),
     	.aluop(sgn_aluop),
     	.funct(instruction [5:0] ),
     	.alu_m(aluctrl_alu_m),
     	.alu_src1(aluctrl_alu_src1),
-    	.mem_addr_mux(aluctrl_mem_addr_mux)
+    	.alu_out_mux(aluctrl_alu_out_mux),
+    	.is_jr_funct(aluctrl_is_jr_funct)
     );
 
-    reg [WIDTH-1:0] alu_a;
     reg [WIDTH-1:0] alu_b;
+    wire [WIDTH-1:0] alu_a_orig = sgn_alu_src1 == `ALUSrc1_OprA ? operandA : PC;
+    wire [WIDTH-1:0] alu_a = aluctrl_alu_src1 == `ALUSrc1_Orig ? alu_a_orig : instruction [10:6] ;
     always @(*) begin
-        alu_a = 0;
         alu_b = 0;
         case(sgn_alu_src2)
-        `ALUSrc2_Reg: alu_b = regfile_rd1;
+        `ALUSrc2_Reg: alu_b = operandB;
+        `ALUSrc2_4:     alu_b = 4;
+        `ALUSrc2_SAddr: alu_b = signed_shifted_Imm;
         `ALUSrc2_SImm: alu_b = signed_Imm;
         `ALUSrc2_UImm: alu_b = unsigned_Imm;
         default: alu_b = 0;
-        endcase
-        case(aluctrl_alu_src1)
-        `ALUSrc1_Rs: alu_a = regfile_rd0;
-        `ALUSrc1_Shamt: alu_a = instruction [10:6];
-        `ALUSrc1_Mem: alu_a = mem_rd; // especially for accm instruction
-        default: alu_a = 0;
         endcase
     end
 
@@ -154,7 +193,18 @@ module CPU
     	.cf(alu_cf),
     	.of(alu_of)
     );
-    wire [WIDTH-1:0] alu_out = alu_y;
+    always @(posedge clk) begin
+        if(rst)
+            alu_out <= 0;
+        else if (run) begin
+            case(aluctrl_alu_out_mux)
+            `ALUOut_Orig: alu_out <= alu_y;  
+            `ALUOut_LT: alu_out <= alu_y[WIDTH-1];
+            `ALUOut_LTU: alu_out <= alu_cf;
+            default: alu_out <= alu_y;
+            endcase
+        end
+    end
 
     /// ##### MEM 段
     ///
@@ -163,29 +213,21 @@ module CPU
     // MEMORY
     // -----------------------------------
 
-    wire mem_write = sgn_mem_write & run;
-    wire [WIDTH-1:0] mem_rd;
-    wire mem_addr =
-        (aluctrl_mem_addr_mux == `MemAddrMux_ALU)? alu_out : regfile_rd0;
-    dist_mem_gen_1 dcache(
-        .clk(clk),
-        .a(mem_addr[9:2]),
-        .d(regfile_rd1),
-        .we(mem_write),
-        .spo(mem_rd),
-        .dpra(m_rf_addr),
-        .dpo(m_data)
-    );
-
-    wire [WIDTH-1:0] nPC = PC + 4;
+    wire [WIDTH-1:0] nPC = alu_y;
     always @(*) begin
-        if(sgn_jump)
-            next_PC = {nPC[31:28], instruction [25:0] , 2'b00};
-        else if(sgn_branch & alu_zf)
-            next_PC = {signed_Imm[29:0], 2'b00} + nPC;
-        else
-            next_PC = nPC;
+        next_PC = 0;
+        case(sgn_pc_source)
+        `PCSource_NPC: next_PC = nPC;
+        `PCSource_Beq: next_PC = alu_out;
+        `PCSource_Jump: next_PC = imm_addr;
+        default: next_PC = 0;
+        endcase
+        if(aluctrl_is_jr_funct)
+            next_PC = operandA;
     end
+    // jr 的优先级最高
+    assign PCwe = aluctrl_is_jr_funct || sgn_pc_write || sgn_pc_write_cond && alu_zf || sgn_pc_write_notcond && ~alu_zf;
+
     /// ##### WB 段
     ///
     /// WB 段，regfile 写入的内容。
@@ -193,9 +235,13 @@ module CPU
     // WRITEBACK
     // -----------------------------------
 
-    assign regfile_wa = (sgn_reg_dst == `RegDst_Rt)? instruction [20:16] : instruction [15:11] ;
+    assign regfile_wa = (sgn_reg_dst == `RegDst_Rt)? instruction [20:16] :
+                        (sgn_reg_dst == `RegDst_Rd)? instruction [15:11] :
+                        (sgn_reg_dst == `RegDst_RA)? 5'b11111 : 0;
     assign regfile_we = sgn_reg_write;
-    assign regfile_wd = (sgn_mem_toreg == `MemToReg_Mem)? mem_rd : alu_out;
+    assign regfile_wd = (sgn_mem_toreg == `MemToReg_Mem)? mdr :
+                        (sgn_mem_toreg == `MemToReg_ALU)? alu_out :
+                        (sgn_mem_toreg == `MemToReg_PC)? PC : 0;
 
     /// ##### Debug 信息
     ///
@@ -209,17 +255,17 @@ module CPU
         next_PC,           // next_pc
         PC,                // pc
         instruction,       // instruction
-        regfile_rd1,       // regfile_rd0
-        regfile_rd1,       // regfile_rd1
+        operandA,          // regfile_rd0
+        operandB,          // regfile_rd1
         alu_out,           // alu_out
-        mem_rd             // mem_rd
+        mdr                // mem_rd
     };                     //
 
     `ifndef SYSTHESIS
     always @(posedge clk) begin
         if(~rst & run) begin
             $display("[cpu] executing instruction: %h", instruction);
-            $display("[cpu] PC update to: %h", next_PC);
+            if(PCwe) $display("[cpu] PC update to: %h", next_PC);
             $display("[cpu] ------------------------------------------------------------------- ");
         end
     end
@@ -227,21 +273,21 @@ module CPU
         if(~rst & run) begin
             if(sgn_mem_read) begin
                 $display("[lw] $%d <- %h ($%d)", instruction [20:16] , alu_out, instruction [25:21] );
-                #1 $display("[lw] read from dcache: %h", mem_rd);
+                #1 $display("[lw] read from dcache: %h", mdr);
             end
         end
     end
     always @(posedge clk) begin
         if(~rst & run) begin
-            if(mem_write) begin
-                $display("[sw] $%d (%d) -> %h", instruction [20:16], regfile_rd1, alu_out);
-                #1 $display("[sw] write to dcache: %h", regfile_rd1);
+            if(sgn_mem_write) begin
+                $display("[sw] $%d (%d) -> %h", instruction [20:16], operandA, alu_out);
+                #1 $display("[sw] write to dcache: %h", operandB);
             end
         end
     end
     always @(posedge clk) begin
         if(~rst & run) begin
-            if(sgn_branch) begin
+            if(sgn_pc_write_cond) begin
                 $display("[beq] signed_Imm:", signed_Imm);
                 $display("[beq] alu_zf: %d PC move to %h", alu_zf, next_PC);
             end

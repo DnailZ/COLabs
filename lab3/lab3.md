@@ -263,3 +263,8 @@ end                                    //
 ## 6 实验建议
 
 * 我们可以给同学们提供一个可以 MIPS 汇编器，可以将MIPS汇编代码直接转换成 vivado 可读取的格式，方便大家自己编写汇编程序来调试。
+
+	于是，我编写了一个python脚本来完成类似的功能（使用armips汇编器，当前文档还不完善，不过功能非常简单） https://github.com/DnailZ/COLabs/tree/master/lab3/assembly，另外，如果助教也是手动编写的话，也可以尝试一下。
+
+
+
