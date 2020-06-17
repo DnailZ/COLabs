@@ -10,9 +10,9 @@
     wire clk_display;
     reg [3:0] char;
     
-    DisplayClock DisplayClock(
+    ttt ttt(
         .clk(clk),
-        .display(clk_display)
+        .clk_display(clk_display)
     );
     
     initial an = 0;
@@ -38,7 +38,7 @@
         endcase
     end
     
-    dist_mem_gen_1 Char_seg(
+    dist_mem_gen_2 Char_seg(
         .a(char),
         .spo(seg)
     );

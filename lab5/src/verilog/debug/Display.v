@@ -1,18 +1,23 @@
-@module Display
+module Display
 #(
-    @defparam
+    parameter SIGNAL_W = 14,
+    parameter REG_W = 5,
+    parameter WIDTH = 32,
+    parameter FUNCT_W = 6,
+    parameter OPCODE_W = 6,
+    parameter ALUOP_W = 3
 )(
-    @ninput clk,
-    @Input data_display Word,
-    @noutput seg [7:0],
-    @noutputr an [2:0]
+    input  clk, 
+    input [WIDTH-1:0] data_display, 
+    output [7:0] seg, 
+    output reg [2:0] an 
 );
     wire clk_display;
     reg [3:0] char;
     
-    DisplayClock DisplayClock(
+    ttt ttt(
         .clk(clk),
-        .display(clk_display)
+        .clk_display(clk_display)
     );
     
     initial an = 0;
@@ -38,7 +43,7 @@
         endcase
     end
     
-    dist_mem_gen_1 Char_seg(
+    dist_mem_gen_2 Char_seg(
         .a(char),
         .spo(seg)
     );
